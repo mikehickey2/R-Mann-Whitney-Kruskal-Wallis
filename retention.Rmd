@@ -1,0 +1,96 @@
+---
+title: "Airline Pilot Retention Analysis"
+author: "Mike Hickey"
+date: "`r Sys.Date()`"
+output:
+  word_document:
+    toc: true
+    toc_depth: 3
+params:
+  data_file: "data/retention.csv"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+## Packages
+library(usethis)
+library(gmodels)
+# “cars” is not an R package; load gracefully if it exists
+suppressWarnings(suppressMessages(require("cars", character.only = TRUE)))
+library(FSA)
+library(PMCMRplus)
+library(DescTools)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(janitor)
+library(here)
+```
+
+```{r load-data}
+raw <- read_csv(
+  here(params$data_file),            # data/retention.csv
+  show_col_types = FALSE
+)
+
+# Row 1 = headers; rows 2‑3 are survey text & metadata → drop them
+retention_data <- raw %>%
+  slice(-(1:2)) %>%                 # remove rows 2 & 3
+  clean_names()                     # snake_case headers
+
+# Remove unwanted metadata columns
+ignore_cols <- c(
+  "start_date", "end_date", "status", "progress", "duration_in_seconds",
+  "recorded_date", "response_id", "distribution_channel",
+  "user_language", "q_recaptcha_score"
+)
+retention_data <- retention_data %>% select(-all_of(ignore_cols))
+
+glimpse(retention_data)
+```
+
+```{r filter-and-count}
+total_records <- nrow(retention_data)
+
+cleaned <- retention_data %>%
+  mutate(
+    finished         = toupper(as.character(finished)),
+    informed_consent = toupper(as.character(informed_consent)),
+    screener         = toupper(as.character(screener))
+  ) %>%
+  mutate(
+    exclusion_reason = case_when(
+      informed_consent != "YES" ~ "did_not_consent",
+      finished         != "TRUE" ~ "did_not_finish",
+      screener         != "YES" ~ "not_air_carrier",
+      TRUE                     ~ "included"
+    )
+  )
+
+exclusion_table <- cleaned %>%
+  count(exclusion_reason, name = "n")
+
+knitr::kable(exclusion_table, caption = "Why Records Were Excluded")
+
+included_data <- cleaned %>%
+  filter(exclusion_reason == "included") %>%
+  select(-exclusion_reason)         # drop helper column
+
+cat("**Total records in file:**", total_records,
+    "\\n\\n**Records kept for analysis:**", nrow(included_data),
+    "\\n\\n**Records excluded:**", total_records - nrow(included_data))
+```
+
+```{r write-clean, echo = TRUE}
+write_csv(included_data, here("data/retention_cleaned.csv"))
+```
+
+```{r preview-clean, echo = FALSE}
+knitr::kable(head(included_data), caption = "Preview of Cleaned Data")
+```
+
+## NEXT STEPS
+Descriptive summaries (age, gender, etc.)
+Mann–Whitney U and Kruskal–Wallis tests
+Visualisations (box‑plots, violin plots, etc.)

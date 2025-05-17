@@ -90,6 +90,307 @@ write_csv(included_data, here("data/retention_cleaned.csv"))
 knitr::kable(head(included_data), caption = "Preview of Cleaned Data")
 ```
 
+```{r age-descriptives}
+library(DescTools)   # for Skew() and Kurt()
+
+# ---- 1. make sure age is numeric ---------------------------------------
+included_data <- included_data %>%
+  mutate(age = as.numeric(age))
+
+# ---- 2. summary table ---------------------------------------------------
+age_summary <- included_data %>%
+  summarise(
+    n           = sum(!is.na(age)),
+    min_age     = min(age, na.rm = TRUE),
+    q1_age      = quantile(age, 0.25, na.rm = TRUE),
+    median_age  = median(age, na.rm = TRUE),
+    mean_age    = mean(age, na.rm = TRUE),
+    q3_age      = quantile(age, 0.75, na.rm = TRUE),
+    max_age     = max(age, na.rm = TRUE),
+    sd_age      = sd(age, na.rm = TRUE),
+    iqr_age     = IQR(age, na.rm = TRUE),
+    skew_age    = Skew(age, na.rm = TRUE),
+    kurt_age    = Kurt(age, na.rm = TRUE)
+  )
+
+knitr::kable(age_summary, digits = 2,
+             caption = "Descriptive Statistics for Age")
+
+# ---- 3. normality test --------------------------------------------------
+if (age_summary$n <= 5000) {
+  shapiro_p <- shapiro.test(included_data$age)$p.value
+  cat("\nShapiro–Wilk normality test p‑value:", round(shapiro_p, 4), "\n")
+}
+
+# ---- 4. histogram + density --------------------------------------------
+ggplot(included_data, aes(x = age)) +
+  geom_histogram(aes(y = ..density..), bins = 15,
+                 fill = "steelblue", alpha = 0.6) +
+  geom_density(color = "red", linewidth = 1) +
+  labs(title = "Age Distribution",
+       x = "Age (years)", y = "Density") +
+  theme_minimal()
+
+# ---- 5. box‑plot for outliers ------------------------------------------
+ggplot(included_data, aes(y = age)) +
+  geom_boxplot(fill = "orange", width = 0.25) +
+  labs(title = "Age Box‑Plot", y = "Age (years)") +
+  theme_minimal()
+```
+
+```{r experience-descriptives}
+library(DescTools)   # for Skew() and Kurt()
+
+# 1 Ensure the variable is numeric
+included_data <- included_data %>%
+  mutate(experience = as.numeric(experience))
+
+# 2 Summary table
+experience_summary <- included_data %>%
+  summarise(
+    n                = sum(!is.na(experience)),
+    min_exp          = min(experience, na.rm = TRUE),
+    q1_exp           = quantile(experience, 0.25, na.rm = TRUE),
+    median_exp       = median(experience, na.rm = TRUE),
+    mean_exp         = mean(experience, na.rm = TRUE),
+    q3_exp           = quantile(experience, 0.75, na.rm = TRUE),
+    max_exp          = max(experience, na.rm = TRUE),
+    sd_exp           = sd(experience, na.rm = TRUE),
+    iqr_exp          = IQR(experience, na.rm = TRUE),
+    skew_exp         = Skew(experience, na.rm = TRUE),
+    kurt_exp         = Kurt(experience, na.rm = TRUE)
+  )
+
+knitr::kable(experience_summary, digits = 2,
+             caption = "Descriptive Statistics for Years of Experience")
+
+# 3 Normality test (Shapiro–Wilk)
+if (experience_summary$n <= 5000) {
+  shapiro_p <- shapiro.test(included_data$experience)$p.value
+  cat("\nShapiro–Wilk normality test p‑value:",
+      format(shapiro_p, digits = 4), "\n")
+}
+
+# 4 Histogram + density curve
+ggplot(included_data, aes(x = experience)) +
+  geom_histogram(aes(y = ..density..), bins = 15,
+                 fill = "steelblue", alpha = 0.6) +
+  geom_density(color = "red", linewidth = 1) +
+  labs(title = "Years of Experience Distribution",
+       x = "Years of Experience", y = "Density") +
+  theme_minimal()
+
+# 5 Box‑plot
+ggplot(included_data, aes(y = experience)) +
+  geom_boxplot(fill = "orange", width = 0.25) +
+  labs(title = "Years of Experience Box‑Plot",
+       y = "Years of Experience") +
+  theme_minimal()
+```
+
+```{r total-flying-hours-descriptives}
+library(DescTools)   # Skew() and Kurt()
+
+# 1 Ensure the variable is numeric ---------------------------------------
+included_data <- included_data %>%
+  mutate(total_flying_hours = as.numeric(total_flying_hours))
+
+# 2 Summary statistics ----------------------------------------------------
+hours_summary <- included_data %>%
+  summarise(
+    n               = sum(!is.na(total_flying_hours)),
+    min_hours       = min(total_flying_hours, na.rm = TRUE),
+    q1_hours        = quantile(total_flying_hours, 0.25, na.rm = TRUE),
+    median_hours    = median(total_flying_hours, na.rm = TRUE),
+    mean_hours      = mean(total_flying_hours, na.rm = TRUE),
+    q3_hours        = quantile(total_flying_hours, 0.75, na.rm = TRUE),
+    max_hours       = max(total_flying_hours, na.rm = TRUE),
+    sd_hours        = sd(total_flying_hours, na.rm = TRUE),
+    iqr_hours       = IQR(total_flying_hours, na.rm = TRUE),
+    skew_hours      = Skew(total_flying_hours, na.rm = TRUE),
+    kurt_hours      = Kurt(total_flying_hours, na.rm = TRUE)
+  )
+
+knitr::kable(hours_summary, digits = 2,
+             caption = "Descriptive Statistics for Total Flying Hours")
+
+# 3 Shapiro–Wilk normality test ------------------------------------------
+if (hours_summary$n <= 5000) {
+  shapiro_p <- shapiro.test(included_data$total_flying_hours)$p.value
+  cat("\nShapiro–Wilk normality test p‑value:",
+      format(shapiro_p, digits = 4), "\n")
+}
+
+# 4 Histogram with density overlay ---------------------------------------
+ggplot(included_data, aes(x = total_flying_hours)) +
+  geom_histogram(aes(y = ..density..), bins = 15,
+                 fill = "steelblue", alpha = 0.6) +
+  geom_density(color = "red", linewidth = 1) +
+  labs(title = "Total Flying Hours Distribution",
+       x = "Total Flying Hours", y = "Density") +
+  theme_minimal()
+
+# 5 Box‑plot for outlier check -------------------------------------------
+ggplot(included_data, aes(y = total_flying_hours)) +
+  geom_boxplot(fill = "orange", width = 0.25) +
+  labs(title = "Total Flying Hours Box‑Plot",
+       y = "Total Flying Hours") +
+  theme_minimal()
+```
+
+```{r gender-descriptives}
+library(janitor)   # tabyl + adorn
+
+# 1 Frequency table with counts & percentages -----------------------------
+gender_table <- included_data %>%
+  tabyl(gender) %>%              # counts
+  adorn_totals("row") %>%        # add Total row
+  adorn_pct_formatting(digits = 1)  # add percent column
+
+knitr::kable(gender_table, caption = "Gender Distribution")
+
+# 2 Count of missing responses -------------------------------------------
+missing_gender <- sum(is.na(included_data$gender) | included_data$gender == "")
+cat("\nMissing / blank gender responses:", missing_gender, "\n")
+
+# 3 Bar chart -------------------------------------------------------------
+ggplot(included_data, aes(x = gender)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Gender Distribution", x = "Gender", y = "Count") +
+  theme_minimal()
+```
+
+```{r carrier-type-descriptives}
+library(janitor)   # tabyl + adorn
+
+# 1 Frequency table with counts & percentages -----------------------------
+carrier_table <- included_data %>%
+  tabyl(air_carrier_type) %>%            # counts
+  adorn_totals("row") %>%                # add Total row
+  adorn_pct_formatting(digits = 1)       # add percent column
+
+knitr::kable(carrier_table,
+             caption = "Air‑Carrier Type Distribution")
+
+# 2 Missing responses -----------------------------------------------------
+missing_carrier <- sum(is.na(included_data$air_carrier_type) |
+                         included_data$air_carrier_type == "")
+cat("\nMissing / blank carrier‑type responses:",
+    missing_carrier, "\n")
+
+# 3 Bar chart -------------------------------------------------------------
+ggplot(included_data, aes(x = air_carrier_type)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Air‑Carrier Type Distribution",
+       x = "Carrier Type", y = "Count") +
+  theme_minimal()
+```
+
+```{r position-descriptives}
+library(janitor)   # tabyl + adorn
+
+# 1 Frequency table: counts + percentages ------------------------------
+position_table <- included_data %>%
+  tabyl(position_position) %>%          # counts
+  adorn_totals("row") %>%               # add Total row
+  adorn_pct_formatting(digits = 1)      # add % column
+
+knitr::kable(position_table,
+             caption = "Flight‑Deck Position Distribution")
+
+# 2 Missing responses ---------------------------------------------------
+missing_pos <- sum(is.na(included_data$position_position) |
+                     included_data$position_position == "")
+cat("\nMissing / blank position responses:",
+    missing_pos, "\n")
+
+# 3 Bar chart -----------------------------------------------------------
+ggplot(included_data, aes(x = position_position)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Flight‑Deck Position Distribution",
+       x = "Position", y = "Count") +
+  theme_minimal()
+```
+
+```{r military-experience-descriptives}
+library(janitor)   # tabyl + adorn
+
+# 1 Recode (two exact strings) -------------------------------------------
+included_data <- included_data %>%
+  mutate(
+    military_bg = case_when(
+      military_experience == "Previously served in the military" ~ "Yes",
+      military_experience == "Never served in the military"      ~ "No",
+      TRUE                                                       ~ NA_character_   # catch unexpected
+    )
+  )
+
+# 2 Frequency table -------------------------------------------------------
+mil_table <- included_data %>%
+  tabyl(military_bg) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting(digits = 1)
+
+knitr::kable(mil_table,
+             caption = "Military Experience Distribution (Yes / No)")
+
+# 3 Missing responses -----------------------------------------------------
+missing_mil <- sum(is.na(included_data$military_bg))
+cat("\nMissing military‑experience responses:", missing_mil, "\n")
+
+# 4 Bar chart -------------------------------------------------------------
+ggplot(included_data, aes(x = military_bg)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Military Background (Yes / No)",
+       x = "Military Background", y = "Count") +
+  theme_minimal()
+```
+
+```{r nationality-descriptives}
+library(janitor)   # tabyl + adorn
+library(stringr)   # str_detect
+
+# ── Part A  Full country table ───────────────────────────────────────────
+country_table <- included_data %>%
+  tabyl(nationality) %>%           # counts
+  arrange(desc(n)) %>%
+  adorn_pct_formatting(digits = 1)
+
+knitr::kable(country_table,
+             caption = "Nationality – Full Country Breakdown")
+
+# ── Part B  U.S. vs Foreign recode ───────────────────────────────────────
+included_data <- included_data %>%
+  mutate(
+    us_vs_foreign = case_when(
+      str_detect(nationality, regex("^united states", ignore_case = TRUE)) |
+      str_detect(nationality, regex("^usa$", ignore_case = TRUE))          ~ "US",
+      is.na(nationality) | nationality == ""                               ~ NA_character_,
+      TRUE                                                                 ~ "Foreign"
+    )
+  )
+
+# Counts & percentages
+us_table <- included_data %>%
+  tabyl(us_vs_foreign) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting(digits = 1)
+
+knitr::kable(us_table,
+             caption = "Nationality Re‑coded to US vs Foreign")
+
+# Bar chart
+ggplot(included_data, aes(x = us_vs_foreign)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "US vs Foreign Pilots",
+       x = "Group", y = "Count") +
+  theme_minimal()
+```
+
+
+
+
+
 ## NEXT STEPS
 Descriptive summaries (age, gender, etc.)
 Mann–Whitney U and Kruskal–Wallis tests

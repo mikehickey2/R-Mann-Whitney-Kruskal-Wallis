@@ -138,6 +138,21 @@ ggplot(included_data, aes(y = age)) +
   theme_minimal()
 ```
 
+```{r age-cutoff-35}
+library(dplyr); library(knitr)
+
+age_35_tbl <- included_data %>%
+  mutate(age_group = if_else(age <= 35, "≤ 35", "> 35")) %>%
+  count(age_group, name = "n") %>%
+  mutate(percent = n / sum(n) * 100) %>%
+  arrange(desc(age_group))  # optional: puts "> 35" second
+
+knitr::kable(age_35_tbl,
+             digits = 1,
+             col.names = c("Age Group", "n", "%"),
+             caption = "Age Distribution: ≤ 35 vs > 35")
+```
+
 ```{r experience-descriptives}
 library(DescTools)   # for Skew() and Kurt()
 

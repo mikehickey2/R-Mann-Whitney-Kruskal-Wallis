@@ -866,6 +866,122 @@ ggplot(heat_raw,
         legend.position = "right")
 ```
 
+```{r RQ2c-position-corrected}
+library(dplyr); library(tidyr); library(rstatix); library(stringr); library(knitr)
+
+# 1 ── clean position variable -------------------------------------------
+included_data <- included_data %>%
+  mutate(
+    position = case_when(
+      str_detect(tolower(position_position), "captain")       ~ "Captain",
+      str_detect(tolower(position_position), "first officer") ~ "First Officer",
+      TRUE                                                    ~ NA_character_
+    )
+  )
+
+cat("Position counts:\n")
+print(table(included_data$position, useNA = "ifany"))   # should show 26 / 50
+
+# 2 ── long rank data -----------------------------------------------------
+position_long <- included_data %>%
+  select(position, all_of(rank_cols)) %>%
+  pivot_longer(cols = all_of(rank_cols),
+               names_to = "factor",
+               values_to = "rank") %>%
+  mutate(
+    factor = str_remove(factor, "_rank$"),
+    rank   = as.numeric(rank)
+  ) %>%
+  filter(!is.na(position))
+
+# 3 ── Table X1: medians by position -------------------------------------
+pos_medians <- position_long %>%
+  group_by(factor, position) %>%
+  summarise(
+    n      = n(),
+    median = median(rank, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from  = position,
+    values_from = c(n, median),
+    names_glue  = "{position}_{.value}"
+  )
+
+knitr::kable(pos_medians,
+             digits = 1,
+             caption = "Table X1\nMedian Rank of General Factors by Flight‑Deck Position")
+
+# 4 ── Mann‑Whitney tests -------------------------------------------------
+pos_counts <- table(included_data$position)
+if(all(pos_counts >= 5)){
+  mw_pos <- position_long %>%
+    group_by(factor) %>%
+    wilcox_test(rank ~ position, exact = FALSE) %>%
+    mutate(p_adj = p.adjust(p, method = "bonferroni")) %>%
+    select(factor, p_adj)
+  
+  knitr::kable(mw_pos,
+               digits = 3,
+               caption = "Table X2\nMann‑Whitney U Tests: Captain vs First Officer (Bonferroni‑adjusted p)")
+} else {
+  cat("\nMann‑Whitney skipped: fewer than 5 cases in one position group.\n")
+}
+```
+
+```{r heatmap-final, fig.height = 6, fig.width = 7}
+library(dplyr); library(tidyr); library(ggplot2); library(stringr)
+
+# ---------- 1. Assemble median tables -----------------------------------
+heat_raw <- bind_rows(
+  age_medians       %>% pivot_longer(-factor) %>% mutate(demo = "Age"),
+  exp_medians       %>% pivot_longer(-factor) %>% mutate(demo = "Experience"),
+  gender_medians    %>% pivot_longer(-factor) %>% mutate(demo = "Gender"),
+  mil_medians       %>% pivot_longer(-factor) %>% mutate(demo = "Military"),
+  pos_medians       %>% pivot_longer(-factor) %>% mutate(demo = "Position")   # new 2c
+) %>%
+  filter(str_detect(name, "_median$")) %>%              # keep medians
+  separate(name, into = c("group", "metric"), sep = "_") %>%
+  select(demo, group, factor, value) %>%
+  mutate(
+    group  = str_replace_all(group, "\\.", " "),
+    factor = str_to_title(str_remove(factor, "_rank$"))  # Capitalise
+  )
+
+# ---------- 2. Heat map --------------------------------------------------
+ggplot(heat_raw,
+       aes(x = factor,
+           y = paste(demo, group, sep = ": "),
+           fill = value)) +
+  geom_tile(colour = "white") +
+  scale_fill_gradient2(
+    low       = "firebrick",   # rank 1 (most important) → red (hot)
+    mid       = "white",
+    high      = "steelblue",   # rank 6 (least important) → blue (cold)
+    midpoint  = 3.5,
+    breaks    = 1:6,
+    limits    = c(1, 6),
+    name      = "Median\nRank"
+  ) +
+  labs(x = "Retention Factor", y = "Demographic Sub-Group") +
+  theme_minimal(base_size = 10) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "right")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

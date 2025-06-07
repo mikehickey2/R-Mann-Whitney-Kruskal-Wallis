@@ -87,11 +87,7 @@ cat("**Total records in file:**", total_records,
 write_csv(included_data, here("data/retention_cleaned.csv"))
 ```
 
-
-
-#```{r preview-clean, echo = FALSE}
-#knitr::kable(head(included_data), caption = "Preview of Cleaned Data")
-#```
+\#`{r preview-clean, echo = FALSE} #knitr::kable(head(included_data), caption = "Preview of Cleaned Data") #`
 
 ```{r age-descriptives}
 library(DescTools)   # for Skew() and Kurt()
@@ -607,7 +603,6 @@ knitr::kable(kw_tbl,
 
 ```
 
-
 ```{r RQ2c-gender-clean}
 library(dplyr); library(tidyr); library(rstatix); library(stringr); library(knitr)
 
@@ -675,7 +670,6 @@ if(all(c("Male", "Female") %in% names(gender_counts)) &&
   cat("\nMann‑Whitney tests skipped: fewer than 5 cases in one gender group.\n")
 }
 ```
-
 
 ```{r RQ2d-military}
 library(dplyr); library(tidyr); library(rstatix); library(knitr)
@@ -823,7 +817,6 @@ ggplot(heat_raw, aes(x = factor, y = paste(demo, group, sep = ": "))) +
         legend.position = "right")
 ```
 
-
 ```{r final-heatmap-blue-red}
 library(dplyr); library(tidyr); library(ggplot2); library(stringr)
 
@@ -968,23 +961,3 @@ ggplot(heat_raw,
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "right")
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

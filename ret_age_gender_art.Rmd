@@ -1,0 +1,54 @@
+---
+title: "age_gender_article_analysis"
+author: "Michael Hickey"
+date: "`r Sys.Date()`"
+output:
+  word_document:
+    toc: true
+    toc_depth: 3
+params:
+  data_file: "data/retention.csv"
+---
+
+```{r setup, include=FALSE}
+
+## Packages
+library(tidyverse)
+library(usethis)
+library(gmodels)
+library(FSA)
+library(PMCMRplus)
+library(DescTools)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(janitor)
+library(here)
+library(rstatix)
+library(knitr)
+library(stringr)
+
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r load-data}
+raw <- read_csv(
+  here(params$data_file),            # data/retention.csv
+  show_col_types = FALSE
+)
+
+# Row 1 = headers; rows 2‑3 are survey text & metadata → drop them
+retention_data <- raw %>%
+  slice(-(1:2)) %>%                 # remove rows 2 & 3
+  clean_names()                     # snake_case headers
+
+# Remove unwanted metadata columns
+ignore_cols <- c(
+  "start_date", "end_date", "status", "progress", "duration_in_seconds",
+  "recorded_date", "response_id", "distribution_channel",
+  "user_language", "q_recaptcha_score"
+)
+retention_data <- retention_data %>% select(-all_of(ignore_cols))
+
+```

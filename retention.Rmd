@@ -961,3 +961,41 @@ ggplot(heat_raw,
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "right")
 ```
+
+## ADD-on for Effect size ##
+
+```{r add_on_effect_size}
+# Assuming your dataframe is called `included_data`
+# and you have 'age_group' (≤35 vs >35) and 'lifestyle_rank' variables
+
+# Run Mann-Whitney test
+mw_test <- wilcox.test(as.numeric(lifestyle_rank) ~ age_group, 
+                       data = included_data, 
+                       exact = FALSE, 
+                       correct = FALSE)
+
+# Compute Z manually
+# Wilcoxon returns W, need to standardize to Z
+N1 <- sum(included_data$age_group == "≤35")
+N2 <- sum(included_data$age_group == ">35")
+N  <- N1 + N2
+
+U <- mw_test$statistic
+mean_U <- N1 * N2 / 2
+sd_U <- sqrt(N1 * N2 * (N1 + N2 + 1) / 12)
+
+Z <- (U - mean_U) / sd_U
+
+# Compute r effect size
+r <- Z / sqrt(N)
+
+# Print results
+list(
+  W = U,
+  Z = Z,
+  r_effect_size = r
+)
+```
+
+
+
